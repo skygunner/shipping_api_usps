@@ -111,7 +111,7 @@ class _base_stock_picking(object):
         'usps_package_location'     : 'Front Door',
         'usps_first_class_mail_type': 'Parcel',
         'usps_size'                 : 'REGULAR',
-        'usps_container'            : 'Variable',
+        'usps_container'            : 'Parcel',
     }
 
     def print_labels(self, cr, uid, ids, context=None):
