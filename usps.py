@@ -28,11 +28,11 @@ class usps_account_shipping(osv.osv):
 
     _columns = {
         'name': fields.char('Name', size=64, required=True),
-        'logistic_company_id': fields.many2one('logistic.company', 'Shipping Company', required=True),
-        'company_id': fields.many2one('res.company', 'Client Company'),
         'account_id' : fields.char('Account ID', size=6, required=True),
         'partner_id' : fields.char('Partner ID', size=12, required=True),
+        'company_id': fields.dummy(string='Company ID', relation='res.company', type='many2one'), # For playing nice with the global domain.
         'passphrase' : fields.char('Passphrase', size=512, password=True, required=True),
+        'company_id' : fields.many2one('res.company', "Company"),
         'active' : fields.boolean('Active'),
         'sandbox': fields.boolean('Sandbox mode'),
         #'tax_id_no': fields.char('Tax Identification Number', size=64 , select=1, help="Shipper's Tax Identification Number."),
@@ -42,6 +42,16 @@ class usps_account_shipping(osv.osv):
         'sandbox': True,
         'active': True
     }
+
+    def get(self, cr, uid, ids, context=None):
+        pool = self.pool.get('usps.account.shipping')
+
+        if not ids or len(ids) == 0:
+            user = self.pool.get('res.users').browse(cr, uid, uid, context=context)
+            ids = pool.search(cr, uid, [('company_id','=',user.company_id.id), ('active','=', True)])
+
+        pool.browse(cr, uid, ids)
+
 usps_account_shipping()
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

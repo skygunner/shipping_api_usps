@@ -20,34 +20,15 @@
 #
 ##############################################################################
 
-import re
-
 from openerp.osv import fields, osv
 
-class logistic_company(osv.osv):
-    _inherit="logistic.company"
-
-    def _get_company_code(self, cr, user, context=None):
-        res =  super(logistic_company, self)._get_company_code(cr, user, context=context)
-        res.append(('usps', 'USPS'))
-        return list(set(res))
-
+class res_company(osv.osv):
+    _inherit = "res.company"
     _columns = {
-        'ship_company_code': fields.selection(_get_company_code, 'Logistic Company', method=True, required=True, size=64),
+        'logistic_company_ids': fields.one2many('logistic.company', 'company_id', 'Logistic Companies'),
         'usps_account_shipping_id': fields.many2one('usps.account.shipping', 'USPS Shipping Account')
     }
 
-    def onchange_shipping_number(self, cr, uid, ids, shipping_no, url, context=None):
-        ret = {}
-        if url:
-            b = url[url.rindex('/'): len(url)]
-            b = b.strip('/')
-            if re.match("^[0-9]*$", b):
-                url = url[0:url.rindex('/')]
-            url += ('/' + shipping_no)
-            ret['url'] = url
-        return{'value': ret}
-
-logistic_company()
+res_company()
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

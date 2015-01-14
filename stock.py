@@ -37,7 +37,7 @@ class logistic_company(osv.osv):
     def _get_company_code(self, cr, user, context=None):
         res = super(logistic_company, self)._get_company_code(cr, user, context=context)
         res.append(('usps', 'USPS'))
-        return res
+        return list(set(res))
 
     _columns = {
         'ship_company_code' : fields.selection(_get_company_code, 'Ship Company', method=True, required=True, size=64),
@@ -60,7 +60,7 @@ class _base_stock_picking(object):
     def _get_company_code(self, cr, user, context=None):
         res = super(_base_stock_picking, self)._get_company_code(cr, user, context=context)
         res.append(('usps', 'USPS'))
-        return res
+        return list(set(res))
 
     def _get_service_type_usps(self, cr, uid, context=None):
         return [(x, re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', x)) for x in Package.shipment_types]
@@ -140,12 +140,19 @@ class _base_stock_picking(object):
         return res
 
     def process_ship(self, cr, uid, ids, context=None):
-        # TODO: Let admin choose printer name.
+        company = self.pool.get('res.users').browse(cr, uid, uid, context=context).company_id
         res = {
             'type': 'ir.actions.client',
             'tag': 'printer_proxy.print',
             'name': _('Print Shipping Label'),
-            'params': {'printer_name': 'zebra', 'data': [], 'format': 'epl2'}
+            'params': {
+                'printer_name': company.printer_proxy_device_name,
+                'url': company.printer_proxy_url,
+                'username': company.printer_proxy_username,
+                'password': company.printer_proxy_password,
+                'data': [],
+                'format': 'epl2'
+            }
         }
         data = self.browse(cr, uid, type(ids) == type([]) and ids[0] or ids, context=context)
 
@@ -181,7 +188,6 @@ class _base_stock_picking(object):
                 error_str = str(e)
                 error.append(error_str)
 
-            cr.commit()
             if error:
                 self.pool.get('stock.packages').write(cr, uid, pkg.id, {'ship_message': error_str}, context=context)
 
@@ -197,49 +203,18 @@ class _base_stock_picking(object):
                                 'for details please see the status packages.'
             }, context=context)
 
-            # @todo: raise appropriate error msg
-            raise osv.except_osv(_('Errors encountered while processing packages'), _(str(error)))
+            res = {
+                'type': 'ir.actions.client',
+                'tag': 'action_warn',
+                'name': 'Failure',
+                'params': {
+                   'title': 'Package Errors',
+                   'text': 'Errors encountered while processing packages. Look at package ship messages for details.',
+                   'sticky': True
+                }
+            }
 
         return res
-
-    def process_void(self, cr, uid, ids, context=None):
-        do = self.browse(cr, uid, type(ids) == type([]) and ids[0] or ids, context=context)
-        if do.ship_company_code != 'usps':
-            return super(_base_stock_picking, self).process_void(cr, uid, ids, context=context)
-
-        if not (do.logis_company and do.logis_company.ship_company_code == 'usps'):
-            return super(_base_stock_picking, self).process_void(cr, uid, ids, context=context)
-
-        test = do.logis_company.test_mode
-        error = False
-
-        for pack in do.packages_ids:
-            if hasattr(pack, "tracking_no") and pack.tracking_no:
-                try:
-                    response = api.v1.cancel_shipping(pack, test=test)
-                except Exception, e:
-                    self.pool.get('stock.packages').write(cr, uid, pack.id, {'ship_message': str(e)}, context=context)
-
-                    print "Shipment Cancel response :", str(e)
-
-                if  response.error:
-                    error = True
-                    self.pool.get('stock.packages').write(cr, uid, pack.id, {
-                        'ship_message': response.error.description + (" (%s)" % response.error.Number)
-                    }, context=context
-                    )
-                else:
-                    self.pool.get('stock.packages').write(cr, uid, pack.id, {
-                        'negotiated_rates' : 0.00, 'shipment_identific_no' :'', 'tracking_no': '',
-                        'tracking_url': '', 'logo' : '', 'ship_message' : 'Shipment Cancelled'
-                    }, context=context)
-
-        if not error:
-            self.write(cr, uid, do.id, {'ship_state':'draft', 'ship_message' : 'Shipment has been cancelled.'}, context=context)
-        else:
-            self.write(cr, uid, do.id, {'ship_message': 'Cancellation of some of shipment has failed, please check the status of packages.'}, context=context)
-
-        return True
 
 
 class stock_picking(_base_stock_picking, osv.osv):

@@ -32,7 +32,7 @@ class shipping_rate_wizard(orm.TransientModel):
     def _get_company_code(self, cr, user, context=None):
         res =  super(shipping_rate_wizard, self)._get_company_code(cr, user, context=context)
         res.append(('usps', 'USPS'))
-        return res
+        return list(set(res))
 
     def default_get(self, cr, uid, fields, context={}):
         res = super(shipping_rate_wizard, self).default_get(cr, uid, fields, context=context)
@@ -73,9 +73,13 @@ class shipping_rate_wizard(orm.TransientModel):
         if not (data['rate_selection'] == 'rate_request' and data['ship_company_code']=='usps'):
             return super(shipping_rate_wizard, self).update_sale_order(cr, uid, ids, context)
         if context.get('active_model',False) == 'sale.order':
+            ship_method_ids = self.pool.get('shipping.rate.config').search(
+                cr, uid, [('name','=',data.usps_service_type)], context=context
+            )
+            ship_method_id = (ship_method_ids and ship_method_ids[0]) or None
             sale_id = context.get('active_id',False)
             sale_id and self.pool.get('sale.order').write(cr,uid,[sale_id],{'shipcharge':data.shipping_cost,
-                                                                            'ship_method':data.usps_service_type,
+                                                                            'ship_method_id':ship_method_id,
                                                                             'sale_account_id':data.logis_company and data.logis_company.ship_account_id and data.logis_company.ship_account_id.id or False,
                                                                             'ship_company_code' :data.ship_company_code,
                                                                             'logis_company' : data.logis_company and data.logis_company.id or False,
@@ -145,6 +149,10 @@ class shipping_rate_wizard(orm.TransientModel):
 
             # Extract the shipping cost from the response, if successful.
             if response['status'] == 0:
+                ship_method_ids = self.pool.get('shipping.rate.config').search(
+                cr, uid, [('name','=',data.usps_service_type)], context=context
+                )
+                ship_method_id = (ship_method_ids and ship_method_ids[0]) or None
                 for item in response['info']:
                     if 'cost' in item:
                         self.write(cr, uid, [data.id], {
@@ -153,7 +161,7 @@ class shipping_rate_wizard(orm.TransientModel):
                         }, context=context)
                         sale.write({
                             'shipcharge': float(item['cost']) or 0.00,
-                            'ship_method':data.ship_company_code + ':' + data.usps_service_type,
+                            'ship_method_id':ship_method_id,
                             'status_message': ''
                         })
                         return True

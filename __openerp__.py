@@ -28,7 +28,7 @@
     """,
     'author': 'RyePDX LLC',
     'website': ' http://www.ryepdx.com',
-    'depends': ['printer_proxy', 'shipping_api', 'web'],
+    'depends': ['printer_proxy', 'shipping_api', 'sale_negotiated_shipping', 'web'],
     'data': [
         'stock_view.xml',
         'sale_view.xml',

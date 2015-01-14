@@ -9,13 +9,13 @@
 			<field name="arch" type="xml">
 				<xpath expr="//page[@string='Shipping']/notebook/page[@string='Shipment']" position="after">
 				<page string="USPS">
-				 	<group colspan="4" col="4" >  
+				 	<group colspan="4" col="4" >
 						<separator string="USPS" colspan="4"/>
 						<field name='usps_service_type' attrs="{'required': [('ship_company_code','=','usps')]}"/>
-						
+
 						<field name='usps_package_location' attrs="{'required': [('ship_company_code','=','usps')]}"/>
 						<field name='usps_confirmation_number' invisible="1"/>
-						
+
 						<field name="usps_container"/>
 						<field name="usps_size"/>
                         <field name="usps_first_class_mail_type" attrs="{'required':[('usps_service_type','in',('First Class','First Class HFP Commercial'))], 'invisible':[('usps_service_type','not in',('First Class','First Class HFP Commercial'))]}"/>
@@ -31,27 +31,16 @@
 				</xpath>
 			</field>
 		</record>
-		
+
 		<record id="stock_packages_form_usps" model="ir.ui.view">
             <field name="name">stock.packages.form.usps</field>
             <field name="model">stock.packages</field>
             <field name= "inherit_id" ref="shipping_api.stock_packages_form"/>
-            <field name="arch" type="xml"> 
+            <field name="arch" type="xml">
               	<field name="tracking_url" position="after" >
               		<field name="usps_confirmation_number" invisible="1"/>
              	</field>
-            </field>     
-		</record>
-
-        <record id="usps_view_picking_shipping_inherit" model="ir.ui.view">
-			<field name="name">stock_form_inherit</field>
-			<field name="model">stock.picking.out</field>
-			<field name="inherit_id" ref="shipping_api.view_picking_shipping_inherit"/>
-			<field name="arch" type="xml">
-				<xpath expr="//field[@name='logis_company']" position="after">
-					<field name='shipper' domain="[('logistic_company_id','=',logis_company)]" />
-				</xpath>
-			</field>
+            </field>
 		</record>
 	</data>
 </openerp>

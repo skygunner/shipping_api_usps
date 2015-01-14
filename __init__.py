@@ -22,12 +22,12 @@
 
 import usps
 import logistic_company
-#import res_company
+import res_company
 import sale
 import stock
 #import shipping_label_type
 import wizard
-#import stock_package
+import stock_packages
 import report
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

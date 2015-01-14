@@ -27,7 +27,7 @@ class sale_order(osv.osv):
     def _get_company_code(self, cr, user, context=None):
         res = super(sale_order, self)._get_company_code(cr, user, context=context)
         res.append(('usps', 'USPS'))
-        return res
+        return list(set(res))
     
     def _get_service_type_usps(self, cr, uid, context=None):
         return [
