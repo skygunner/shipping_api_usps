@@ -2,6 +2,7 @@
 ##############################################################################
 #
 #    OpenERP, Open Source Management Solution
+#    Copyright (C) 2015 RyePDX LLC (<http://www.ryepdx.com/>)
 #    Copyright (C) 2011 NovaPoint Group LLC (<http://www.novapointgroup.com>)
 #    Copyright (C) 2004-2010 OpenERP SA (<http://www.openerp.com>)
 #
@@ -22,12 +23,12 @@
 
 {
     'name': 'Shipping API USPS',
-    'version': '2.2',
+    'version': '3.0',
     'category': 'Generic Modules/Others',
     'description': """
     """,
-    'author': 'RyePDX LLC',
-    'website': ' http://www.ryepdx.com',
+    'author': ['NovaPoint Group LLC', 'RyePDX LLC'],
+    'website': ['http://www.novapointgroup.com', 'http://www.ryepdx.com/'],
     'depends': ['printer_proxy', 'shipping_api', 'sale_negotiated_shipping', 'web'],
     'data': [
         'stock_view.xml',
