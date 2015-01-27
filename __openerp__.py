@@ -44,7 +44,7 @@
     ],
     'demo': [
     ],
-    'test': ['test/shipping_api_usps.yml'],
+    #'test': ['test/shipping_api_usps.yml'],
     'installable': True,
     'active': False,
 }
